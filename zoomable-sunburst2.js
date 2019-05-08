@@ -5,32 +5,34 @@
 // Runtime version: 1
 
 window.myData = {
-  "name": "flare",
+  "name": "Main Menu",
   "children": [
     {
       "name": "Start Here",
       "percentageComplete": "1",
       "icon" : "\uf135",
+      "blockTransition" : false,
+      "callback": ()=>{alert("Example of callback fired off with no transition executed")},
       "children": [
         {
           "name": "cluster",
           "percentageComplete": "05",
           "children": [
             {
-              "name": "AgglomerativeCluster",
+              "name": "Child pie slice 1",
               "icon": "\uf494",
               "value": 100
             },
             {
-              "name": "CommunityStructure",
+              "name": "Child pie slice 2",
               "value": 100
             },
             {
-              "name": "HierarchicalCluster",
+              "name": "Child pie slice 3",
               "value": 100
             },
             {
-              "name": "MergeEdge",
+              "name": "Child pie slice 4",
               "value": 200
             }
           ]
@@ -270,7 +272,6 @@ This variant of a [sunburst diagram](/@d3/sunburst) shows only two layers of the
       addLinearGradients(i1, offset);
       i1++
     }
-    console.log("WORKING?");
     offset = offset + .25;
     i1 = 0;
   }
@@ -282,7 +283,8 @@ This variant of a [sunburst diagram](/@d3/sunburst) shows only two layers of the
     .join("path")
       //.attr("fill", "url(#svgGradient3)")
       .attr("fill", d => gradientAssign(d.current))
-      .attr("fill-opacity", d => arcVisible(d.current) ? (d.children ? 0.6 : 1) : 0)
+      .attr("fill-saved", d => gradientAssign(d.current))
+      .attr("fill-opacity", d => arcVisible(d.current) ? (d.children ? 1 : 1) : 0)
       //same rules as arcVisible are fine for this. 
       .attr("stroke-opacity", d => arcVisible(d.current) ? 1 : 0)
       //.attr("fill-opacity", d => arcVisible(d.current.depth === 1) ? (d.children ? 0.6 : 1) : 0)
@@ -295,20 +297,26 @@ This variant of a [sunburst diagram](/@d3/sunburst) shows only two layers of the
 
       function gradientAssign(d){
         const simX = (d.x0 + d.x1) / 2 * 180 / Math.PI;
-        console.log('DATA');
-        console.log(d);
+        //console.log('DATA');
+        //console.log(d);
         const levelCompletePostFix = d.data.percentageComplete ?  d.data.percentageComplete : "0";
         //adds the angle and the amount complete from the json file;
         //(parseInt(simX) + 90)
         return "url(#svgGradient" + parseInt(simX) + "-" + levelCompletePostFix + ")";
         return simX;
-        console.log('TEST'); 
-        console.log(parseInt(simX));
+        //console.log('TEST'); 
+        //console.log(parseInt(simX));
       }
 
   path.filter(d => d.children)
       .style("cursor", "pointer")
-      .on("click", clicked);
+      .on("click", clicked).on('mouseover', function(d,i) {
+        d3.select(this).attr('fill', '#0095ff');
+        })
+      .on('mouseout', function(d,i) {
+        var fillStringRef = d3.select(this).attr("fill-saved");
+        d3.select(this).attr('fill', fillStringRef);
+      });
 
 
 
@@ -349,13 +357,57 @@ This variant of a [sunburst diagram](/@d3/sunburst) shows only two layers of the
 
 
 
-//end aaron added sloop
+// this is the cirle, which right now, is just a circle. 
   const parent = g.append("circle")
       .datum(root)
       .attr("r", radius + 40)
       .attr("fill", "white")
+      //.attr("pointer-events", "all")
+      //.on("click", clicked);
+
+// this is the 'BreadCrumnb text' #breadCrumb
+g.append("text")
+  .datum(root)
+      .attr("dy", "1.55em")
+      //.attr("dx", "-.55em")
+      .attr('font-size', "50" )
+      .attr("style","font-family:FranklinGothic-Heavy, Frankin Gothic, sans-serif;")
+      .attr("opacity", "1")
+      .attr("id", "breadCrumb")
+      .attr("fill", "#e5e5e5")
+      .style('text-anchor', 'middle')
+      .text("Main Menu")
+
+ 
+// this is the 'back button' #backButton
+g.append("text")
+  .datum(root)
+      .attr("dy", "2.35em")
+      .attr("dx", "-.55em")
+      .attr('font-size', "60px" )
+      .attr("style","font-family:FontAwesome;")
+      .attr("opacity", "0")
+      .attr("id", "backButton")
       .attr("pointer-events", "all")
-      .on("click", clicked);
+      .attr("fill", "#e5e5e5")
+      .text("\uf04a")
+    .style('cursor', 'pointer')
+    .on('mouseover', function(d,i) {
+      d3.select(this).transition()
+        //.ease('cubic-out')
+        //.duration('200')
+        .attr('font-size', "61px")
+        .attr('fill', '#0095ff');
+    })
+    .on('mouseout', function(d,i) {
+      d3.select(this).transition()
+        //.ease('cubic-out')
+        //.duration('200')
+        .attr('font-size', "60px")
+        .attr('fill', '#e5e5e5');
+    }).on("click", clicked);
+
+ 
 
   function clicked(p, e) {
 
@@ -363,6 +415,17 @@ This variant of a [sunburst diagram](/@d3/sunburst) shows only two layers of the
     p.data.callback && p.data.callback();
     if(p.data.blockTransition){
       return false;
+    }
+    //check for a 'drill down depth of 0' against the object, if so hide the back button
+    var breadcrumb = d3.select("#breadCrumb");
+    if(p.depth === 0){
+      d3.select("#backButton").transition().attr('opacity', 0);
+      breadcrumb.transition().attr("font-size", 50);
+      breadcrumb.text("Main Menu");
+    } else {
+      d3.select("#backButton").transition().attr('opacity', 1);
+      breadcrumb.transition().attr("font-size", 60 / (p.depth + 1));
+      breadcrumb.text(d => `${p.ancestors().map(d => d.data.name).reverse().join("/")}`);
     }
     console.log("tEST MOUSE EVENT");
     console.log(p);
@@ -389,7 +452,8 @@ This variant of a [sunburst diagram](/@d3/sunburst) shows only two layers of the
       .filter(function(d) {
         return +this.getAttribute("fill-opacity") || arcVisible(d.target);
       })
-        .attr("fill-opacity", d => arcVisible(d.target) ? (d.children ? 0.6 : 0.4) : 0)
+        //only shows nodes with children, option here to toggle visibility if no children i.e. ((d.children ? 1 : 0.4))
+        .attr("fill-opacity", d => arcVisible(d.target) ? (d.children ? 1 : 1) : 0)
         .attr("stroke-opacity", d => arcVisible(d.target) ? (d.children ? 1 : 1) : 0)
         .attrTween("d", d => () => arc(d.current));
 
@@ -433,7 +497,7 @@ This variant of a [sunburst diagram](/@d3/sunburst) shows only two layers of the
    function labelTransform(d) {
     const x = (d.x0 + d.x1) / 2 * 180 / Math.PI;
     const y = ((d.y0 + d.y1) / 2 * radius) + 150;
-    console.log(`rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`);
+    //console.log(`rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`);
     return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180}) rotate(${x < 180 ? 90 : 270})`;
 
   }
@@ -441,7 +505,7 @@ This variant of a [sunburst diagram](/@d3/sunburst) shows only two layers of the
    function labelTransform2(d) {
     const x = (d.x0 + d.x1) / 2 * 180 / Math.PI;
     const y = ((d.y0 + d.y1) / 2 * radius) + 50;
-    console.log(`rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`);
+    //console.log(`rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`);
     return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180}) rotate(${x < 180 ? 90 : 270})`;
 
   }
