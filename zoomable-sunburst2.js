@@ -304,7 +304,9 @@ This variant of a [sunburst diagram](/@d3/sunburst) shows only two layers of the
         //console.log(parseInt(simX));
       }
 
-  path.filter(d => d.children)
+  //Initially this fed of children, lets modify it to feed off of 'complete'    
+  //path.filter(d => d.children)
+  path.filter(d => d.data.percentageComplete != 1)
       .style("cursor", "pointer")
       .on("click", clicked).on('mouseover', function(d,i) {
         d3.select(this).attr('fill', '#0095ff');
