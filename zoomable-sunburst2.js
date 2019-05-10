@@ -174,6 +174,8 @@ window.myData = {
   ]
 };
 
+
+
 const m0 = {
   id: "9b4aad062597319b@341",
   variables: [
@@ -190,7 +192,8 @@ This variant of a [sunburst diagram](/@d3/sunburst) shows only two layers of the
       inputs: ["partition","data","d3","DOM","width","color","arc","format","radius"],
       value: (function(partition,data,d3,DOM,width,color,arc,format,radius)
 {
-  const root = partition(data);
+  //const root = partition(data);
+  const root = partition(d3, data);
 
   //const root = partition.nodes(root)
   //      .filter(function(d) {                
@@ -199,7 +202,12 @@ This variant of a [sunburst diagram](/@d3/sunburst) shows only two layers of the
 
   root.each(d => d.current = d);
 
-  const svg = d3.select(DOM.svg(width, width))
+  var svgPre = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svgPre.setAttribute('width', width);
+  svgPre.setAttribute('height', width);
+  svgPre.setAttribute('viewBox', "0,0," + width + "," + width);
+  
+  const svg = d3.select(svgPre)
       .style("width", "100%")
       .style("height", "auto")
       .style("font", "10px sans-serif")
@@ -527,10 +535,10 @@ g.append("text")
       inputs: ["d3"],
       value: (function(d3){return(
 data => {
-  const root = d3.hierarchy(data)
+  const root = window.d3.hierarchy(window.myData)
       .sum(d => d.value)
       .sort((a, b) => b.value - a.value);
-  return d3.partition()
+  return window.d3.partition()
       .size([2 * Math.PI, root.height + 1])
     (root);
 }
@@ -547,7 +555,7 @@ d3.scaleOrdinal(d3.quantize(d3.interpolateRainbow, data.children.length + 1))
       name: "format",
       inputs: ["d3"],
       value: (function(d3){return(
-d3.format(",d")
+window.d3.format(",d")
 )})
     },
     {
@@ -566,7 +574,10 @@ width / 6
     {
       name: "arc",
       inputs: ["d3","radius"],
-      value: (function(d3,radius){return(
+      value: (function(d3,radius){
+
+        
+        return(
 //d3.arc()
 //    .startAngle(d => d.x0)
 //    .endAngle(d => d.x1)
@@ -575,6 +586,7 @@ width / 6
 //    .innerRadius(d => d.y0 * radius)
 //    .outerRadius(d => Math.max(d.y0 * radius, d.y1 * radius - 1))
 //)})
+
     d3.arc()
     .startAngle(d => d.x0)
     .endAngle(d => d.x1)
@@ -590,8 +602,8 @@ width / 6
       name: "d3",
       inputs: ["require"],
       value: (function(require){return(
-require("d3@5")
-)})
+        window.d3
+      )})
     }
   ]
 };
