@@ -6,16 +6,12 @@
  <link href="style.css" rel="stylesheet">
 
 <body style="width: 1600px;" class="pie__white_radient">
-<script type="module">
-
-import {Inspector, Runtime} from "https://unpkg.com/@observablehq/notebook-runtime@1?module";
-import notebook from "./zoomable-sunburst2.js";
-console.log('what');
-console.log(notebook);
-
-Runtime.load(notebook, Inspector.into(document.body));
-
-</script>
-<!--<script data-require="d3@*" data-semver="3.2.2" src="//cdnjs.cloudflare.com/ajax/libs/d3/3.2.2/d3.v3.min.js"></script>-->
 <script src="https://d3js.org/d3.v5.min.js"></script>
+<script src="./buildSVG.js"></script>		
+<script type="text/javascript">
+	window.svgVal = renderChart(window.myData);
+	//d3's append wants this to be a function or string literal
+	window.d3.select("body").append(function(){return svgVal;});
+</script>
+
 <script src="./guage2.js"></script>-->
