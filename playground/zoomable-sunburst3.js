@@ -144,7 +144,12 @@ window.myData = {
     {
       "name": "Hiring Staff",
       "icon": "\uf002",
-      "value": 2000
+      "children": [
+            {
+              "name": "placeHolder",
+              "value": 2000
+            }
+          ]
     },
     {
       "name": "Copyrights",
@@ -174,8 +179,6 @@ window.myData = {
   ]
 };
 
-
-
 const m0 = {
   id: "9b4aad062597319b@341",
   variables: [
@@ -192,8 +195,7 @@ This variant of a [sunburst diagram](/@d3/sunburst) shows only two layers of the
       inputs: ["partition","data","d3","DOM","width","color","arc","format","radius"],
       value: (function(partition,data,d3,DOM,width,color,arc,format,radius)
 {
-  //const root = partition(data);
-  const root = partition(d3, data);
+  const root = partition(data);
 
   //const root = partition.nodes(root)
   //      .filter(function(d) {                
@@ -202,16 +204,10 @@ This variant of a [sunburst diagram](/@d3/sunburst) shows only two layers of the
 
   root.each(d => d.current = d);
 
-  var svgPre = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svgPre.setAttribute('width', width);
-  svgPre.setAttribute('height', width);
-  svgPre.setAttribute('viewBox', "0,0," + width + "," + width);
-  
-  const svg = d3.select(svgPre)
+  const svg = d3.select(DOM.svg(width, width))
       .style("width", "100%")
       .style("height", "auto")
-      .style("font", "10px sans-serif")
-      .attr("class", "pie__white_radient_dropshadow");
+      .style("font", "10px sans-serif");
 
   const g = svg.append("g")
       .attr("transform", `translate(${width / 2},${width / 2})`);
@@ -312,9 +308,7 @@ This variant of a [sunburst diagram](/@d3/sunburst) shows only two layers of the
         //console.log(parseInt(simX));
       }
 
-  //Initially this fed of children, lets modify it to feed off of 'complete'    
-  //path.filter(d => d.children)
-  path.filter(d => d.data.percentageComplete != 1)
+  path.filter(d => d.children)
       .style("cursor", "pointer")
       .on("click", clicked).on('mouseover', function(d,i) {
         d3.select(this).attr('fill', '#0095ff');
@@ -327,7 +321,7 @@ This variant of a [sunburst diagram](/@d3/sunburst) shows only two layers of the
 
 
   path.append("title")
-      .text(d => `${d.ancestors().map(d => d.data.name).reverse().join("/")}\n`);
+      .text(d => `${d.ancestors().map(d => d.data.name).reverse().join("/")}\n${format(d.value)}`);
 
   const label = g.append("g")
       .attr("pointer-events", "none")
@@ -503,10 +497,8 @@ g.append("text")
    function labelTransform(d) {
     const x = (d.x0 + d.x1) / 2 * 180 / Math.PI;
     const y = ((d.y0 + d.y1) / 2 * radius) + 150;
-    console.log('yo');
-    console.log(x);
     //console.log(`rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`);
-    return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180}) rotate(${x < 180 ? 90 : 270}) rotate(${x > 90 && x < 270 ? 180 : 0})`;
+    return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180}) rotate(${x < 180 ? 90 : 270})`;
 
   }
 
@@ -517,6 +509,196 @@ g.append("text")
     return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180}) rotate(${x < 180 ? 90 : 270})`;
 
   }
+
+  //START METER SHIT HERE
+  let Gauge = function(configuration) {
+  let that = {}
+
+  let config = {
+    size: 500,
+    arcInset: 150,
+    arcWidth: 60,
+
+    pointerWidth: 8,
+    pointerOffset: 0,
+    pointerHeadLengthPercent: 0.9,
+
+    minValue: 0,
+    maxValue: 100000,
+
+    minAngle: -90,
+    maxAngle: 90,
+
+    transitionMs: 750,
+
+    currentLabelFontSize: 20,
+    currentLabelInset: 20,
+    labelFont: "Helvetica",
+    labelFontSize: 15,
+    labelFormat: (numberToFormat) => {
+      return numberToFormat;
+      let prefix = d3.formatPrefix(numberToFormat)
+      console.log(prefix)
+      return prefix.scale(numberToFormat) + '' + prefix.symbol.toUpperCase()
+    },
+
+    arcColorFn: function(value) {
+      let ticks = [{
+        tick: 0,
+        color: 'green'
+      }, {
+        tick: 25000,
+        color: 'yellow'
+      }, {
+        tick: 50000,
+        color: 'orange'
+      }, {
+        tick: 75000,
+        color: 'red'
+      }]
+      let ret;
+      ticks.forEach(function(tick) {
+
+        if (value > tick.tick) {
+          ret = tick.color
+          return
+        }
+      });
+      return ret;
+    }
+  }
+
+  function configure(configuration) {
+    for (let prop in configuration) {
+      config[prop] = configuration[prop]
+    }
+  }
+  configure(configuration);
+
+  let foreground, arc, svg, current;
+  let cur_color;
+  let new_color, hold;
+
+  var oR = config.size - config.arcInset;
+  var iR = config.size - oR - config.arcWidth;
+
+  function deg2rad(deg) {
+    return deg * Math.PI / 180
+  }
+
+  function render(value) {
+
+    //oR = 30;
+    //iR = 10;
+
+
+
+    // Arc Defaults
+    arc = d3.arc()
+      .innerRadius(iR)
+      .outerRadius(oR)
+      .startAngle(deg2rad(-90))
+
+    // Place svg element
+    svg = d3.select("body").append("svg")
+      .attr("width", config.size)
+      .attr("height", config.size)
+      .append("g").attr("transform", "translate(" + config.size / 2 + "," + config.size / 2 + ")")
+
+
+    // Append background arc to svg
+    var background = svg.append("path")
+      .datum({
+        endAngle: deg2rad(90)
+      })
+      .attr("class", "gaugeBackground")
+      .attr("d", arc)
+
+    // Append foreground arc to svg
+    foreground = svg.append("path")
+      .datum({
+        endAngle: deg2rad(-90)
+      })
+      //.style("fill", cur_color)
+      .attr("d", arc);
+
+    // Display Max value
+    var max = svg.append("text")
+      .attr("transform", "translate(" + (iR + ((oR - iR) / 2)) + ",15)") // Set between inner and outer Radius
+      .attr("text-anchor", "middle")
+      .style("font-family", config.labelFont)
+      .text(config.labelFormat(config.maxValue))
+
+    // Display Min value
+    var min = svg.append("text")
+      .attr("transform", "translate(" + -(iR + ((oR - iR) / 2)) + ",15)") // Set between inner and outer Radius
+      .attr("text-anchor", "middle")
+      .style("font-size", config.labelFontSize)
+      .style("font-family", config.labelFont)
+      .text(config.minValue)
+
+    // Display Current value  
+    current = svg.append("text")
+      .attr("transform", "translate(0," + -(-config.currentLabelInset + iR / 4) + ")") // Push up from center 1/4 of innerRadius
+      .attr("text-anchor", "middle")
+      .style("font-size", config.currentLabelFontSize)
+      .style("font-family", config.labelFont)
+      .text(config.labelFormat(current))
+  }
+
+
+  function update(value) {
+    // Get new color
+    new_color = config.arcColorFn(value)
+    console.log(new_color)
+
+    var numPi = deg2rad(Math.floor(value * 180 / config.maxValue - 90));
+
+    // Display Current value
+    current.transition()
+      .text(value)
+      // .text(config.labelFormat(value))
+
+    // Arc Transition
+    foreground.transition()
+      .duration(config.transitionMs)
+      .styleTween("fill", function() {
+        return d3.interpolate(new_color, cur_color);
+      })
+      .call(arcTween, numPi);
+
+    // Set colors for next transition
+    hold = cur_color;
+    cur_color = new_color;
+    new_color = hold;
+  }
+
+  // Update animation
+  function arcTween(transition, newAngle) {
+    transition.attrTween("d", function(d) {
+      var interpolate = d3.interpolate(d.endAngle, newAngle);
+      return function(t) {
+        d.endAngle = interpolate(t);
+        return arc(d);
+      };
+    });
+  }
+
+  render();
+  that.update = update;
+  that.configuration = config;
+  return that;
+}
+
+let x = new Gauge({
+  //size: 500
+});
+//console.log(g)
+//x.update(30000);
+  //END METER SHIT HERE
+
+
+
 
   return svg.node();
 }
@@ -535,10 +717,10 @@ g.append("text")
       inputs: ["d3"],
       value: (function(d3){return(
 data => {
-  const root = window.d3.hierarchy(window.myData)
+  const root = d3.hierarchy(data)
       .sum(d => d.value)
       .sort((a, b) => b.value - a.value);
-  return window.d3.partition()
+  return d3.partition()
       .size([2 * Math.PI, root.height + 1])
     (root);
 }
@@ -555,7 +737,7 @@ d3.scaleOrdinal(d3.quantize(d3.interpolateRainbow, data.children.length + 1))
       name: "format",
       inputs: ["d3"],
       value: (function(d3){return(
-window.d3.format(",d")
+d3.format(",d")
 )})
     },
     {
@@ -574,10 +756,7 @@ width / 6
     {
       name: "arc",
       inputs: ["d3","radius"],
-      value: (function(d3,radius){
-
-
-        return(
+      value: (function(d3,radius){return(
 //d3.arc()
 //    .startAngle(d => d.x0)
 //    .endAngle(d => d.x1)
@@ -586,7 +765,6 @@ width / 6
 //    .innerRadius(d => d.y0 * radius)
 //    .outerRadius(d => Math.max(d.y0 * radius, d.y1 * radius - 1))
 //)})
-
     d3.arc()
     .startAngle(d => d.x0)
     .endAngle(d => d.x1)
@@ -602,8 +780,8 @@ width / 6
       name: "d3",
       inputs: ["require"],
       value: (function(require){return(
-        window.d3
-      )})
+require("d3@5")
+)})
     }
   ]
 };
