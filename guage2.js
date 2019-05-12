@@ -2,8 +2,8 @@ let Gauge = function(configuration) {
   let that = {}
 
   let config = {
-    size: 605,
-    arcInset: 300,
+    size: 585,
+    arcInset: 289,
     arcWidth: 20,
 
     pointerWidth: 8,
@@ -11,17 +11,17 @@ let Gauge = function(configuration) {
     pointerHeadLengthPercent: 0.9,
 
     minValue: 0,
-    maxValue: 100000,
+    maxValue: 100,
 
     minAngle: -90,
     maxAngle: 90,
 
     transitionMs: 750,
 
-    currentLabelFontSize: 20,
+    currentLabelFontSize: 170,
     currentLabelInset: 20,
-    labelFont: "Helvetica",
-    labelFontSize: 15,
+    labelFont: "FranklinGothic-Heavy",
+    labelFontSize: 25,
     labelFormat: (numberToFormat) => {
       return numberToFormat;
       let prefix = d3.formatPrefix(numberToFormat)
@@ -34,13 +34,13 @@ let Gauge = function(configuration) {
         tick: 0,
         color: 'green'
       }, {
-        tick: 25000,
+        tick: 25,
         color: 'yellow'
       }, {
-        tick: 50000,
+        tick: 50,
         color: 'orange'
       }, {
-        tick: 75000,
+        tick: 75,
         color: 'red'
       }]
       let ret;
@@ -88,10 +88,14 @@ let Gauge = function(configuration) {
 
     // Place svg element
     svg = d3.select("body").append("svg")
-      .attr("width", config.size)
-      .attr("height", config.size)
+      .attr("width", config.size + 30)
+      //.attr("height", config.size - 30)430
+      .attr("height", "430px")
+      .style("position", "relative")
+      .style("top", "-1123px")
+      .style("left", "20px")
       .append("g")
-      .attr("transform", "translate(" + config.size / 2 + "," + config.size / 2 + ")")
+      .attr("transform", "translate(" + ((config.size / 2) + 10) + "," + ((config.size / 2) + 10) + ")")
 
 
     // Append background arc to svg
@@ -112,18 +116,19 @@ let Gauge = function(configuration) {
 
     // Display Max value
     var max = svg.append("text")
-      .attr("transform", "translate(" + (iR + ((oR - iR) / 2)) + ",15)") // Set between inner and outer Radius
-      .attr("text-anchor", "middle")
-      .style("font-family", config.labelFont)
-      .text(config.labelFormat(config.maxValue))
-
-    // Display Min value
-    var min = svg.append("text")
-      .attr("transform", "translate(" + -(iR + ((oR - iR) / 2)) + ",15)") // Set between inner and outer Radius
+      .attr("transform", "translate(" + (iR + ((oR - iR) / 2)-50) + ",35)") // Set between inner and outer Radius
       .attr("text-anchor", "middle")
       .style("font-size", config.labelFontSize)
       .style("font-family", config.labelFont)
-      .text(config.minValue)
+      .text(config.labelFormat(config.maxValue) + '%')
+
+    // Display Min value
+    var min = svg.append("text")
+      .attr("transform", "translate(" + -(iR + ((oR - iR) / 2)-40) + ",35)") // Set between inner and outer Radius
+      .attr("text-anchor", "middle")
+      .style("font-size", config.labelFontSize)
+      .style("font-family", config.labelFont)
+      .text(config.minValue + '%')
 
     // Display Current value  
     current = svg.append("text")
@@ -131,7 +136,7 @@ let Gauge = function(configuration) {
       .attr("text-anchor", "middle")
       .style("font-size", config.currentLabelFontSize)
       .style("font-family", config.labelFont)
-      .text(config.labelFormat(current))
+      .text(config.labelFormat(current) + '%')
   }
 
 
@@ -144,7 +149,7 @@ let Gauge = function(configuration) {
 
     // Display Current value
     current.transition()
-      .text(value)
+      .text(value +'%')
       // .text(config.labelFormat(value))
 
     // Arc Transition
@@ -178,9 +183,9 @@ let Gauge = function(configuration) {
   return that;
 }
 
-let g = new Gauge({
+window.g = new Gauge({
   
 });
 console.log(g)
-g.update(30000);
+g.update(10);
 //g.update(70000);

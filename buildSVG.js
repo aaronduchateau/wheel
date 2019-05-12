@@ -255,6 +255,15 @@ const renderChart = (data) => {
 	i1 = 0;
 	}
 
+	//add circle for visual indication of outside stroke
+	var outerCircle = g.append("circle")
+	  .attr("id", "outerCircle")
+	  .attr("r", 0)
+	  .attr("stroke-width", 200)
+	  .attr("fill-opacity", 0)
+	  .attr("stroke", "#74ff69");
+	 
+
 
 	const path = g.append("g")
 	.selectAll("path")
@@ -266,7 +275,7 @@ const renderChart = (data) => {
 	  //same rules as arcVisible are fine for this. 
 	  .attr("stroke-opacity", d => arcVisible(d.current) ? 1 : 0)
 	  .attr("d", d => arc(d.current))
-	  .attr("stroke-width", 10)
+	  .attr("stroke-width", 1)
 	  .attr("class", "pie__white_radient2")
 	  .attr("stroke", "#e0e0e0");
 
@@ -305,6 +314,8 @@ const renderChart = (data) => {
 	.selectAll("text")
 	.data(root.descendants().slice(1))
 	.join("text")
+	    .attr("font-weight", 100)
+    	.attr("letter-spacing", "2.5px")
 	  .attr("dy", "0.35em")
 	  .attr('font-size', "20px" )
 	  .attr("fill-opacity", d => +labelVisible(d.current))
@@ -336,15 +347,17 @@ const renderChart = (data) => {
 	  .attr("r", radius + 40)
 	  .attr("fill", "white")
 
+
+
 	// this is the 'BreadCrumnb text' #breadCrumb
 	g.append("text")
 	.datum(root)
 	  .attr("dy", "1.55em")
 	  .attr('font-size', "50" )
 	  .attr("style","font-family:FranklinGothic-Heavy, Frankin Gothic, sans-serif;")
-	  .attr("opacity", "1")
+	  .attr("opacity", ".7")
 	  .attr("id", "breadCrumb")
-	  .attr("fill", "#e5e5e5")
+	  .attr("fill", "#55555")
 	  .style('text-anchor', 'middle')
 	  .text("Main Menu")
 
@@ -381,6 +394,8 @@ const renderChart = (data) => {
 
 	function clicked(p, e) {
 
+		window.g.update(Math.floor(Math.random() * 100) + 1  );
+
 	//exercise the callback associated with the object
 	p.data.callback && p.data.callback();
 	if(p.data.blockTransition){
@@ -394,9 +409,12 @@ const renderChart = (data) => {
 	  breadcrumb.text("Main Menu");
 	} else {
 	  d3.select("#backButton").transition().attr('opacity', 1);
-	  breadcrumb.transition().attr("font-size", 60 / (p.depth + 1));
+	  breadcrumb.transition().attr("font-size", 40 / (p.depth + 1));
 	  breadcrumb.text(d => `${p.ancestors().map(d => d.data.name).reverse().join("/")}`);
 	}
+
+	//just a cool animation with our outer circle
+	outerCircle.transition().duration(500).attr('opacity', 0).attr('stroke-width', 700).attr('r', 0).attr('stroke', '#74ff69').transition().duration(500).attr('opacity', 1).attr('r', radius + radius + 49).attr('stroke-width', 18).transition().duration(500).attr('stroke', '#e0e0e0').attr('r', radius + radius + 44).attr('stroke-width', 10);
 
 	parent.datum(p.parent || root);
 
@@ -461,6 +479,8 @@ const renderChart = (data) => {
 		return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180}) rotate(${x < 180 ? 90 : 270})`;
 
 	}
+
+	outerCircle.transition().delay(500).duration(500).attr('r', radius + radius + 54).attr('stroke-width', 30).transition().duration(500).attr('stroke', '#e0e0e0').attr('r', radius + radius + 44).attr('stroke-width', 10);
 
 	return svg.node();
 
