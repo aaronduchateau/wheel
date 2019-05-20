@@ -1,9 +1,9 @@
-//tsc ts-gauge.ts
+//tsc buildSVG.ts
 var Wheel = /** @class */ (function () {
     function Wheel(data, d3, width) {
         var _this = this;
         if (width === void 0) { width = 932; }
-        this.clicked = function (p, e) {
+        this.clicked = function (p) {
             //exercise the callback associated with the object
             p.data.callback && p.data.callback();
             if (p.data.blockTransition) {
@@ -279,6 +279,10 @@ var Wheel = /** @class */ (function () {
         }).on("click", this.clicked);
         this.outerCircle.transition().delay(500).duration(500).attr('r', radius + radius + 54).attr('stroke-width', 30).transition().duration(500).attr('stroke', '#e0e0e0').attr('r', radius + radius + 44).attr('stroke-width', 10);
         return svg.node();
+    };
+    Wheel.prototype.update = function (data) {
+        this.data = data;
+        return this.renderWheel();
     };
     return Wheel;
 }());

@@ -6,18 +6,27 @@
  <link href="../style.css" rel="stylesheet">
 
 <body style="width: 1600px;" class="pie__white_radient">
+  <button onclick="liveAppendData()">Click me to mess with wheel</button>
+</body>
 <script src="https://d3js.org/d3.v5.min.js"></script>
 <!--typescript version of buildSVG below-->
-<script src="../buildSVG.js"></script>
+<script src="../buildSVG.js"></script> 
 <!--including old version just for window.myData-->
 <script src="./buildSVG.js"></script>			
 <script type="text/javascript">
     var localWheel = new Wheel(window.myData, window.d3, 932);
-    
-
-	window.svgVal = localWheel.renderWheel();
-	//d3's append wants this to be a function or string literal
-	window.d3.select("body").append(function(){return svgVal;});
+	  var svgVal = localWheel.renderWheel();
+    //d3's append wants this to be a function or string literal
+    window.d3.select("body").append(function(){return svgVal;});
+  
+  function liveAppendData(){
+    //just remove a child to mock data maniupulation
+    window.myData.children.pop();
+    svgVal = localWheel.update(window.myData);
+    window.d3.select("body").append(function(){return svgVal;});
+    //localWheel.renderWheel();
+    console.log(window.myData.children);
+  }
 
 
 </script>

@@ -1,4 +1,4 @@
-//tsc ts-gauge.ts
+//tsc buildSVG.ts
 class Wheel {
 	private width: number;
 	private radius: number;
@@ -68,7 +68,7 @@ class Wheel {
 		return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180}) rotate(${x < 180 ? 90 : 270})`;
 	}
 
-	private gradientAssign(d){
+	private gradientAssign(d: any){
 		let simX: number = (d.x0 + d.x1) / 2 * 180 / Math.PI;
 		simX = parseInt(simX.toString());
 	
@@ -78,7 +78,7 @@ class Wheel {
 		//return simX;
 	}
 
-	private addLinearGradients(i, offset, defs){
+	private addLinearGradients(i: number, offset: number, defs: any){
 		var offsetLabel = offset.toString().replace(".","");
 		var anglePI = (i) * (Math.PI / 180);
 		var gradient = defs.append("linearGradient")
@@ -102,7 +102,7 @@ class Wheel {
 		.attr("stop-opacity", 0);
 	}
 
-	private clicked = (p, e) =>  {
+	private clicked = (p: any) =>  {
 		//exercise the callback associated with the object
 		p.data.callback && p.data.callback();
 		if (p.data.blockTransition){
@@ -338,7 +338,13 @@ class Wheel {
 
 		return svg.node();
 
-	}
+    }
+    
+    public update(data: any) {
+        this.data = data;
+        return this.renderWheel();
+
+    }
 
 
 }
