@@ -162,7 +162,7 @@ window.myData = {
               "value": 2000
             }
           ]
-    },
+    }
     
   
   ]
@@ -424,6 +424,7 @@ const renderChart = (data) => {
 	  y0: Math.max(0, d.y0 - p.depth),
 	  y1: Math.max(0, d.y1 - p.depth)
 	});
+	
 
 	const t = g.transition().duration(750);
 
